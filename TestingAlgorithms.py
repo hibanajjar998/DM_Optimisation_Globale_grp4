@@ -12,17 +12,17 @@ import random
 import time
 
 #Testing PRS vs Multistart
-def main1(n):
+def main_PRS_MS(n, solver_name='snopt'):
 
-    Multi_n_iter = 2*100
-    PRS_n_iter = Multi_n_iter*2*60
+    Multi_n_iter = n*100
+    PRS_n_iter = Multi_n_iter*n*60
 
     seed1 = 42
 
     gen_multi = random.Random()
 
-    # chosing the solver
-    localsolver = create_solver('snopt')
+    # calling the solver
+    localsolver = create_solver(solver_name)
     
     mymodel = CirclePacking(n)
 
@@ -36,7 +36,7 @@ def main1(n):
     gen_multi.seed(seed1)
     # launching multistart
     FoundSolution = multistart(mymodel, Multi_n_iter, gen_multi, localsolver, labels, logfile)
-
+    model_MS = mymodel.clone()
     multistart_time = time.process_time()
 
     print("-----------------\n\n")
@@ -44,7 +44,7 @@ def main1(n):
     #restarting from same seed
     gen_multi.seed(seed1)
     purerandomsearch(mymodel, PRS_n_iter, gen_multi, labels, logfile)
-
+    model_PRS = mymodel.clone()
     prs_time = time.process_time()
 
     print("\n--------------\nLoading... ", tech_time)
@@ -52,15 +52,14 @@ def main1(n):
 
     print("PRS ", prs_time - multistart_time)
     print("Total ", prs_time)
-    
-    return mymodel
+
+    return model_PRS, model_MS
 
 
 # Testing MBH
-def main2(n):
+def main_MBH(n,solver_name='snopt'):
     
-    
-    max_no_improve = n*20
+    max_no_improve = n*2
 
     seed1 = 123
     seed2 = 48
@@ -68,10 +67,10 @@ def main2(n):
     gen = random.Random()
     pert = random.Random()
     
-    # chosing the solver
-    localsolver = create_solver('snopt')
+    # calling the solver
+    localsolver = create_solver(solver_name)
     
-    #mymodel = Rastrigin(n, -5.12, 5.12)
+    # create the circle packing model
     mymodel = CirclePacking(n)
 
     #needed to retrieve variable names
@@ -100,8 +99,24 @@ def main2(n):
 
 
 if __name__ == '__main__':
-    n = 4
-    mymodel = main2(n)
-    PlotModel(mymodel)
+    n = 3
+    solver_name = 'snopt'
+    
+    # run different optimisation algorithms
+    model_PRS, model_MS = main_PRS_MS(n,solver_name)
+    MBH_model = main_MBH(n,solver_name)
+    
+    # plot the results
+    window=Tk()      
+    PlotModel(window, model_PRS,'on', "Pure Random Search", solver_name)
+    PlotModel(window, model_MS,'ontop', "MultiStart", solver_name)
+    #PlotModel(window, MBH_model,'ontop', "MBH", solver_name)
+    window.mainloop()
 
 
+# NB:
+# if problem with ghostscript (error gs ...), download gs from following link
+# then and execute: https://www.ghostscript.com/download/gsdnld.html
+# then check if the path for the 'EpsImagePlugin.gs_windows_binary' variable
+# in code 'BoxConstrainedGO_Algorithms.py' fits yours.
+    

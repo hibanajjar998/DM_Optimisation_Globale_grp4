@@ -4,7 +4,9 @@ from pyomo.opt import SolverStatus, TerminationCondition
 import os, sys
 sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__),'../utilities')))
 from optmodel_utilities import *
-from tkinter import Tk, Canvas
+from tkinter import Tk, Canvas, Button, Toplevel, filedialog
+from PIL import Image, EpsImagePlugin
+EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
 
 # This method will create a slover. It takes as argument the name of the solver 
 # (a string variable, here by default is `'cplex'`, the argument would be `'gurobi'` if, e.g., Gurobi was desired instead of `'cplex'`)  and it returns an object solver where you can invoke `solve()`
@@ -14,31 +16,58 @@ from tkinter import Tk, Canvas
 # 
 
 
-def PlotModel(model):
+def savegraph(canvas,window):
+    fileName = filedialog.asksaveasfilename(parent=window,defaultextension='.eps',  title="Save to jpg")
+    if fileName:
+        # save postscipt image 
+        canvas.postscript(file = fileName)
+        print("fileName : ",fileName)
+        im = Image.open(fileName)
+        im.save(fileName[:-4] + '_jpeg.jpeg', 'jpeg', dpi=(530,600), optimize=True, quality=94, progressive=True ) 
+
+        
+
+def PlotModel(window, model, level='on',type_opt="", solver_name=""):
+    """
+    level == 'on' : create canvas on the window
+    level == 'ontop' : vreate another level on top of the window
+    type_opt in {'PRS', 'MS', 'MBH}  """
     
+    
+    # extract usefull values from the model
     n = model.n.value
     r = model.r.value
     x_dict = model.x.get_values()
     y_dict = model.y.get_values()
 
+    # set the parameters of the Tkinter window (root)
+    margin = 0
     ech = 500
     bg_color = "#F5CBA7"
     ball_color = "#F1C40F"
     
+    # fill the tkinter window:
+    if level=='on' : root = window
+    else: root = Toplevel(window)
+    title = type_opt+" - Solver "+solver_name+" - n = "+str(n)
+    root.title(title)
+    root.geometry(str(2*margin+ech)+"x"+str(ech+40))
+    
+    # create the Canvas to plot the circles and add a save button
+    cnv = Canvas(root, height=ech, width=ech) 
+    cnv.grid(row=0, column=0)
+    Button(root , text='Save to png',font=('Lucida Bright', '11'), bg="#0e2f2f", fg="#ffffff", command=lambda: savegraph(cnv,root)).grid(row=1, column =0)
+
+    bg = cnv.create_rectangle(margin, margin, margin+ech, margin+ech, outline="#F5CBA7", fill=bg_color)
+    
+
     def create_circle(canvas, x, y, r):
         return canvas.create_oval(x-r, y-r, x+r, y+r,dash=5, fill=ball_color)
 
-    top = Tk()
-    top.title("n = "+str(n))
-    C = Canvas(top, height=ech, width=ech)    
-    bg = C.create_rectangle(0, 0, 1*ech, 1*ech, outline="#F5CBA7", fill=bg_color)
-    C.pack()
-    
     for i in range(n):
-        cercle = create_circle(C, ech*x_dict[i+1], ech*y_dict[i+1], ech*r)
-        C.pack
+        cercle = create_circle(cnv, ech*x_dict[i+1], ech*y_dict[i+1], ech*r)
+        cnv.pack
     
-    top.mainloop()
 
 
 
