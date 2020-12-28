@@ -334,7 +334,7 @@ def MBH(mymodel, gen, localsolver, labels,
         #start local search (perturbation of the current point)
         while (no_improve < max_no_improve):
 
-            perturb_point_adj(mymodel, pert)
+            perturb_point(mymodel, pert)
             results =localsolver.solve(mymodel)
             obj = mymodel.obj()
 
@@ -411,7 +411,7 @@ def MBH_MultiTrial(mymodel, iter, gen, localsolver, labels,
             #start local search (perturbation of the current point)
             while (no_improve < max_no_improve):
                 
-                perturb_point_adj(mymodel, pert)
+                perturb_point(mymodel, pert)
                 results =localsolver.solve(mymodel)
                 obj = mymodel.obj()
 
