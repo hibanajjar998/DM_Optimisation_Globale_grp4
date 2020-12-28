@@ -7,7 +7,7 @@ sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__),'../uti
 from optmodel_utilities import *
 from tkinter import Tk, Canvas, Button, Toplevel, filedialog
 from PIL import Image, EpsImagePlugin
-EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
+EpsImagePlugin.gs_windows_binary =  r'C:\Program Files (x86)\gs\gs9.25\bin\gswin32c'
 
 # This method will create a slover. It takes as argument the name of the solver 
 # (a string variable, here by default is `'cplex'`, the argument would be `'gurobi'` if, e.g., Gurobi was desired instead of `'cplex'`)  and it returns an object solver where you can invoke `solve()`
@@ -17,8 +17,8 @@ EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
 # 
 
 
-def savegraph(canvas,window):
-    fileName = filedialog.asksaveasfilename(parent=window,defaultextension='.eps',  title="Save to jpg")
+def savegraph(canvas,window,title):
+    fileName =  fileName = r'C:/Users/33758/Desktop/3A Mines/Optimisation/DM 2/figures/' + title
     if fileName:
         # save postscipt image 
         canvas.postscript(file = fileName)
@@ -57,7 +57,7 @@ def PlotModel(window, model, level='root',type_opt="", solver_name=""):
     # create the Canvas to plot the circles and add a save button
     cnv = Canvas(root, height=ech, width=ech) 
     cnv.grid(row=0, column=0)
-    Button(root , text='Save to png',font=('Lucida Bright', '11'), bg="#0e2f2f", fg="#ffffff", command=lambda: savegraph(cnv,root)).grid(row=1, column =0)
+    Button(root , text='Save to png',font=('Lucida Bright', '11'), bg="#0e2f2f", fg="#ffffff", command=lambda: savegraph(cnv,root,title)).grid(row=1, column =0)
 
     bg = cnv.create_rectangle(margin, margin, margin+ech, margin+ech, outline="#F5CBA7", fill=bg_color)
     
@@ -88,9 +88,11 @@ def perturb_point(model, gen_pert, epsilon = 0.3):
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
+        model.r = max(0, min(model.r.value, 1))
 
 # adjusted perturbation
 def perturb_point_adj(model, gen_pert):
@@ -98,10 +100,11 @@ def perturb_point_adj(model, gen_pert):
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
-
+        model.r = max(0, min(model.r.value, 1))
 
 
 
@@ -331,7 +334,7 @@ def MBH(mymodel, gen, localsolver, labels,
         #start local search (perturbation of the current point)
         while (no_improve < max_no_improve):
 
-            perturb_point(mymodel, pert)
+            perturb_point_adj(mymodel, pert)
             results =localsolver.solve(mymodel)
             obj = mymodel.obj()
 
@@ -408,7 +411,7 @@ def MBH_MultiTrial(mymodel, iter, gen, localsolver, labels,
             #start local search (perturbation of the current point)
             while (no_improve < max_no_improve):
                 
-                perturb_point(mymodel, pert)
+                perturb_point_adj(mymodel, pert)
                 results =localsolver.solve(mymodel)
                 obj = mymodel.obj()
 
