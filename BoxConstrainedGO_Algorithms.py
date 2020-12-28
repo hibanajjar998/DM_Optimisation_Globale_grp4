@@ -15,16 +15,17 @@ EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
 # Make sure to unzip the solvers in `solvers` directory 
 # 
 # 
+#fileName = filedialog.asksaveasfilename(parent=window,defaultextension='.eps',  title="Save to jpg")
 
 
-def savegraph(canvas,window):
-    fileName = filedialog.asksaveasfilename(parent=window,defaultextension='.eps',  title="Save to jpg")
+def savegraph(canvas,window,title):
+    fileName = r'C:/Users/hiban/Desktop/MN S9/Optimisation Globale (Bernardetta)/DM_Optimisation_Globale_grp4/Figures/' + title
     if fileName:
         # save postscipt image 
         canvas.postscript(file = fileName)
         print("fileName : ",fileName)
         im = Image.open(fileName)
-        im.save(fileName[:-4] + '_jpeg.jpeg', 'jpeg', dpi=(530,600), optimize=True, quality=94, progressive=True ) 
+        im.save(fileName + '.jpeg', 'jpeg', dpi=(530,600), optimize=True, quality=94, progressive=True ) 
 
         
 
@@ -57,7 +58,7 @@ def PlotModel(window, model, level='root',type_opt="", solver_name=""):
     # create the Canvas to plot the circles and add a save button
     cnv = Canvas(root, height=ech, width=ech) 
     cnv.grid(row=0, column=0)
-    Button(root , text='Save to png',font=('Lucida Bright', '11'), bg="#0e2f2f", fg="#ffffff", command=lambda: savegraph(cnv,root)).grid(row=1, column =0)
+    Button(root , text='Save to png',font=('Lucida Bright', '11'), bg="#0e2f2f", fg="#ffffff", command=lambda: savegraph(cnv,root,title)).grid(row=1, column =0)
 
     bg = cnv.create_rectangle(margin, margin, margin+ech, margin+ech, outline="#F5CBA7", fill=bg_color)
     
@@ -76,11 +77,13 @@ def create_solver(solver_name = 'cplex'):
     solver_path = get_solver_path(solver_name)
     return  SolverFactory(solver_name, executable=str(solver_path), solver_io = 'nl')
 
-# random generating point keeping in [lb,ub]
+# random generating point keeping r in [0,0.5] and x,y in [0+r, 1-r]
 def random_point(model, gen_multi):
+    model.r.value = gen_multi.uniform(0, 0.5)
     for i in model.N:
-        model.x[i] = gen_multi.uniform(0, 1)
-        model.y[i] = gen_multi.uniform(0, 1)
+        model.x[i] = gen_multi.uniform(0+model.r.value, 1-model.r.value)
+        model.y[i] = gen_multi.uniform(0+model.r.value, 1-model.r.value)
+
 
 # perturbation
 def perturb_point(model, gen_pert, epsilon = 0.3):
@@ -215,7 +218,7 @@ def multistart(mymodel, iter, gen_multi, localsolver, labels,
         random_point(mymodel, gen_multi)
 
         # local search
-        results = localsolver.solve(mymodel)
+        results = localsolver.solve(mymodel,load_solutions=True)
 
         # printing result and solution on screen
         if check_if_optimal(results):
@@ -263,7 +266,7 @@ def multistart_timed(mymodel, time_limit, gen_multi, localsolver, labels,
         random_point(mymodel, gen_multi)
 
         # local search
-        results = localsolver.solve(mymodel)
+        results = localsolver.solve(mymodel,load_solutions=True)
 
         # printing result and solution on screen
         if check_if_optimal(results):
@@ -317,7 +320,7 @@ def MBH(mymodel, gen, localsolver, labels,
 
     #look for a starting local solution
     random_point(mymodel, gen)
-    results = localsolver.solve(mymodel)
+    results = localsolver.solve(mymodel,load_solutions=True)
 
     # a first feasible solution is found
     if check_if_optimal(results):
@@ -332,7 +335,7 @@ def MBH(mymodel, gen, localsolver, labels,
         while (no_improve < max_no_improve):
 
             perturb_point(mymodel, pert)
-            results =localsolver.solve(mymodel)
+            results =localsolver.solve(mymodel,load_solutions=True)
             obj = mymodel.obj()
 
             if check_if_optimal(results):
@@ -385,7 +388,7 @@ def MBH_MultiTrial(mymodel, iter, gen, localsolver, labels,
         random_point(mymodel, gen)
 
         # local search
-        results = localsolver.solve(mymodel)
+        results = localsolver.solve(mymodel,load_solutions=True)
 
         # a first feasible solution is found
         if check_if_optimal(results):
@@ -409,7 +412,7 @@ def MBH_MultiTrial(mymodel, iter, gen, localsolver, labels,
             while (no_improve < max_no_improve):
                 
                 perturb_point(mymodel, pert)
-                results =localsolver.solve(mymodel)
+                results =localsolver.solve(mymodel,load_solutions=True)
                 obj = mymodel.obj()
 
                 if check_if_optimal(results):
@@ -470,7 +473,7 @@ def MBH_MultiTrial_timed(mymodel, time_limit, gen, localsolver, labels,
         random_point(mymodel, gen)
 
         # local search
-        results = localsolver.solve(mymodel)
+        results = localsolver.solve(mymodel,load_solutions=True)
 
         # a first feasible solution is found
         if check_if_optimal(results):
@@ -494,7 +497,7 @@ def MBH_MultiTrial_timed(mymodel, time_limit, gen, localsolver, labels,
             while (no_improve < max_no_improve):
                 
                 perturb_point(mymodel, pert)
-                results =localsolver.solve(mymodel)
+                results =localsolver.solve(mymodel,load_solutions=True)
                 obj = mymodel.obj()
 
                 if check_if_optimal(results):
