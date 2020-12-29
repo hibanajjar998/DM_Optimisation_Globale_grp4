@@ -92,7 +92,7 @@ def random_point(model, gen_multi):
 
 # perturbation
 def perturb_point(model, gen_pert, epsilon = 0.3):
-    epsilon = 0.3
+    epsilon = 0.1
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
