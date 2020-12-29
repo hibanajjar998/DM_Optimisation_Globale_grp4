@@ -7,7 +7,7 @@ sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__),'../uti
 from optmodel_utilities import *
 from tkinter import Tk, Canvas, Button, Toplevel, filedialog
 from PIL import Image, EpsImagePlugin
-EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
+EpsImagePlugin.gs_windows_binary =  r'C:\Program Files (x86)\gs\gs9.25\bin\gswin32c'
 
 # This method will create a slover. It takes as argument the name of the solver 
 # (a string variable, here by default is `'cplex'`, the argument would be `'gurobi'` if, e.g., Gurobi was desired instead of `'cplex'`)  and it returns an object solver where you can invoke `solve()`
@@ -91,9 +91,11 @@ def perturb_point(model, gen_pert, epsilon = 0.3):
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
+        model.r = max(0, min(model.r.value, 1))
 
 # adjusted perturbation
 def perturb_point_adj(model, gen_pert):
@@ -101,10 +103,11 @@ def perturb_point_adj(model, gen_pert):
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
-
+        model.r = max(0, min(model.r.value, 1))
 
 
 
