@@ -11,8 +11,10 @@ from BoxConstrainedGO_Algorithms import *
 import random
 import time
 
+
+
 #Testing PRS vs Multistart
-def main_PRS_MS(n, solver_name='snopt', time_limit=0):
+def main_MS(n, solver_name='snopt', time_limit=0):
 
     Multi_n_iter = n*100
     PRS_n_iter = Multi_n_iter*n*60
@@ -41,23 +43,11 @@ def main_PRS_MS(n, solver_name='snopt', time_limit=0):
     model_MS = mymodel.clone()
     multistart_time = time.process_time()
 
-    print("-----------------\n\n")
-        
-    #restarting from same seed
-    gen_multi.seed(seed1)
-    if time_limit==0: purerandomsearch(mymodel, PRS_n_iter, gen_multi, labels, logfile)
-    else: purerandomsearch_timed(mymodel, time_limit, gen_multi, labels, logfile)
-
-    model_PRS = mymodel.clone()
-    prs_time = time.process_time()
-
     print("\n--------------\nLoading... ", tech_time)
     print("Multistart ", multistart_time - tech_time)
 
-    print("PRS ", prs_time - multistart_time)
-    print("Total ", prs_time)
 
-    return model_PRS, model_MS
+    return model_MS
 
 
 # Testing MBH
@@ -109,28 +99,33 @@ def main_MBH(n,solver_name='snopt', iter=100, mbh_multitrial=False, time_limit=0
 
 
 if __name__ == '__main__':
-    n = 2
-    solver_name = "minos" #,"loqo" , "lgo"  ,'knitro' , 'conopt' , 'snopt'
+    n = 21
+    solver_name = "knitro" #,"loqo", "minos" , "lgo"  ,'knitro' , 'conopt' , 'snopt'
     iter = 10
     mbh_multitrial = True
     # if time_limit==0, the optimisation is not timed
-    time_limit = 2 #(in seconds)
+    # if time_limit!=0, the optimisation is timed and the number of iterations is disregarded
+    time_limit = n #(in seconds)
     
     # run different optimisation algorithms
-    model_PRS, model_MS = main_PRS_MS(n,solver_name, time_limit)
+    model_MS = main_MS(n,solver_name, time_limit)
     MBH_model = main_MBH(n,solver_name, iter, mbh_multitrial, time_limit)
     
     # plot the results
     window=Tk()      
-    PlotModel(window, model_PRS,'root', "Pure Random Search", solver_name)
-    PlotModel(window, model_MS,'ontop', "MultiStart", solver_name)
+    PlotModel(window, model_MS,'root', "MultiStart", solver_name)
     PlotModel(window, MBH_model,'ontop', "MBH", solver_name)
     window.mainloop()
+    
+    # print r values
+    print("\n\nMultiStart: r=",model_MS.r.value)
+    print("MBH: r=",MBH_model.r.value)
+
 
 
 # NB:
 # if problem with ghostscript (error gs ...), download gs from following link
 # then and execute: https://www.ghostscript.com/download/gsdnld.html
-# then check if the path for the 'EpsImagePlugin.gs_windows_binary' variable
+# !!! then check if the path for the 'EpsImagePlugin.gs_windows_binary' variable
 # in code 'BoxConstrainedGO_Algorithms.py' fits yours.
     
