@@ -4,7 +4,6 @@ from pyomo.core.base.block import generate_cuid_names
 from pyomo.opt import SolverFactory
 from pyomo.opt import SolverStatus, TerminationCondition
 
-from BoxConstrainedFunctions import *
 from CirclePacking import *
 from BoxConstrainedGO_Algorithms import *
 
@@ -14,7 +13,7 @@ import time
 
 
 #Testing PRS vs Multistart
-def main_MS(n, solver_name='snopt', time_limit=0):
+def main_MS(n, solver_name='snopt', time_limit=0, model_3D=False):
 
     Multi_n_iter = n*100
     PRS_n_iter = Multi_n_iter*n*60
@@ -26,7 +25,8 @@ def main_MS(n, solver_name='snopt', time_limit=0):
     # calling the solver
     localsolver = create_solver(solver_name)
     
-    mymodel = CirclePacking(n)
+    if model_3D : mymodel = CirclePacking_3D(n)
+    else: mymodel = CirclePacking(n)
 
     #needed to retrieve variable names
     labels = generate_cuid_names(mymodel)
@@ -51,9 +51,9 @@ def main_MS(n, solver_name='snopt', time_limit=0):
 
 
 # Testing MBH
-def main_MBH(n,solver_name='snopt', iter=100, mbh_multitrial=False, time_limit=0):
+def main_MBH(n,solver_name='snopt', iter=100, mbh_multitrial=False, time_limit=0, model_3D=False):
     
-    max_no_improve = n*2
+    max_no_improve = 50
 
     seed1 = 123
     seed2 = 48
@@ -65,7 +65,8 @@ def main_MBH(n,solver_name='snopt', iter=100, mbh_multitrial=False, time_limit=0
     localsolver = create_solver(solver_name)
     
     # create the circle packing model
-    mymodel = CirclePacking(n)
+    if model_3D : mymodel = CirclePacking_3D(n)
+    else: mymodel = CirclePacking(n)
 
     #needed to retrieve variable names
     labels = generate_cuid_names(mymodel)
@@ -99,7 +100,9 @@ def main_MBH(n,solver_name='snopt', iter=100, mbh_multitrial=False, time_limit=0
 
 
 if __name__ == '__main__':
-    n = 21
+    
+    model_3D = True
+    n = 4
     solver_name = "knitro" #,"loqo", "minos" , "lgo"  ,'knitro' , 'conopt' , 'snopt'
     iter = 10
     mbh_multitrial = True
@@ -108,8 +111,8 @@ if __name__ == '__main__':
     time_limit = n #(in seconds)
     
     # run different optimisation algorithms
-    model_MS = main_MS(n,solver_name, time_limit)
-    MBH_model = main_MBH(n,solver_name, iter, mbh_multitrial, time_limit)
+    model_MS = main_MS(n,solver_name, time_limit, model_3D)
+    MBH_model = main_MBH(n,solver_name, iter, mbh_multitrial, time_limit, model_3D)
     
     # plot the results
     window=Tk()      

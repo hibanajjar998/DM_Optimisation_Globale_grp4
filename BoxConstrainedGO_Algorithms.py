@@ -84,115 +84,45 @@ def create_solver(solver_name = 'cplex'):
 
 # random generating point keeping r in [0,0.5] and x,y in [0+r, 1-r]
 def random_point(model, gen_multi):
+    model_3D = hasattr(model, 'z')
     model.r.value = gen_multi.uniform(0, 0.5)
     for i in model.N:
         model.x[i] = gen_multi.uniform(0+model.r.value, 1-model.r.value)
         model.y[i] = gen_multi.uniform(0+model.r.value, 1-model.r.value)
+        if model_3D: model.z[i] = gen_multi.uniform(0+model.r.value, 1-model.r.value)
+        
 
 
 # perturbation
 def perturb_point(model, gen_pert, epsilon = 0.3):
+    model_3D = hasattr(model, 'z')
     epsilon = 0.1
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        if model_3D : model.z[i] = model.z[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
+        model_3D : model.z[i] = max(0, min(model.z[i].value, 1))
         model.r = max(0, min(model.r.value, 1))
 
 # adjusted perturbation
 def perturb_point_adj(model, gen_pert):
+    model_3D = hasattr(model, 'z')
     epsilon = 0.01*model.r.value
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
+        if model_3D : model.z[i] = model.z[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
+        model_3D : model.z[i] = max(0, min(model.z[i].value, 1))
         model.r = max(0, min(model.r.value, 1))
 
-
-
-
-
-
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# Pure Random Search
-
-
-# this function performs a pure random search on a model and
-# for a given number of iterations
-def purerandomsearch(mymodel, iter, gen_multi, labels,
-                     logfile = None, epsilon=10**-4):
-
-    algo_name = "PRS:"
-    best_obj = 10000 #put a reasonable value bound for the objective
-    bestpoint = {} #dictionary to store the best solution
-    
-    nb_solution = 0
-
-    for it in range(1,iter+1):
-        random_point(mymodel, gen_multi)
-
-        #we trust random generation to produce a feasible point
-        #otherwise we need to check feasibility
-        
-        # printing result and solution on screen
-        obj = mymodel.obj()
-        print(algo_name + " Iteration ", it, " current value ", obj, end = '', file = logfile)
-        if obj < best_obj -epsilon:  # + epsilon:
-            best_obj = obj
-            print(" *", file = logfile)
-            printPointFromModel(mymodel, logfile)
-            StorePoint(mymodel, bestpoint, labels)
-        else:
-            print(file = logfile)
-
-    print(algo_name +" Best record found  {0:8.4f}".format(best_obj))
-    LoadPoint(mymodel, bestpoint)
-    printPointFromModel(mymodel)
-
-    return True
-
-# this function performs a timed version ofpure random search 
-def purerandomsearch_timed(mymodel, time_limit, gen_multi, labels,
-                     logfile = None, epsilon=10**-4):
-
-    algo_name = "PRS:"
-    best_obj = 10000 #put a reasonable value bound for the objective
-    bestpoint = {} #dictionary to store the best solution
-    
-    nb_solution = 0
-    time_start = time.time()
-    it = 0
-    
-    while time.time()-time_start < time_limit :
-        it+=1
-        random_point(mymodel, gen_multi)
-
-        #we trust random generation to produce a feasible point
-        #otherwise we need to check feasibility
-        
-        # printing result and solution on screen
-        obj = mymodel.obj()
-        print(algo_name + " Iteration ", it, " current value ", obj, end = '', file = logfile)
-        if obj < best_obj -epsilon:  # + epsilon:
-            best_obj = obj
-            print(" *", file = logfile)
-            printPointFromModel(mymodel, logfile)
-            StorePoint(mymodel, bestpoint, labels)
-        else:
-            print(file = logfile)
-
-    print(algo_name +" Best record found  {0:8.4f}".format(best_obj))
-    LoadPoint(mymodel, bestpoint)
-    printPointFromModel(mymodel)
-
-    return True
 
 def check_if_optimal(results):
     ok = (results.solver.status == pe.SolverStatus.ok)
