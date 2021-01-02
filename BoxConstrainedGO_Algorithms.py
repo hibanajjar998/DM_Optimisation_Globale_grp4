@@ -105,7 +105,7 @@ def perturb_point(model, gen_pert, epsilon = 0.3):
         #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
-        model_3D : model.z[i] = max(0, min(model.z[i].value, 1))
+        if model_3D : model.z[i] = max(0, min(model.z[i].value, 1))
         model.r = max(0, min(model.r.value, 1))
 
 # adjusted perturbation
