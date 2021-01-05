@@ -24,11 +24,12 @@ EpsImagePlugin.gs_windows_binary =  r'C:\Program Files\gs\gs9.53.3\bin\gswin64c'
 
 
 def savegraph(canvas,window,title):
-    fileName = r'C:/Users/hiban/Desktop/MN S9/Optimisation Globale (Bernardetta)/DM_Optimisation_Globale_grp4/Figures/' + title
+    directory = os.path.dirname(os.path.abspath(__file__))+'/Figures/'
+    if not os.path.exists(directory): os.makedirs(directory) # creates directory 'Figures' if not existing
+    fileName = directory+title
     if fileName:
         # save postscipt image 
         canvas.postscript(file = fileName)
-        print("fileName : ",fileName)
         im = Image.open(fileName)
         im.save(fileName + '.jpeg', 'jpeg', dpi=(530,600), optimize=True, quality=94, progressive=True ) 
 
@@ -56,6 +57,7 @@ def PlotModel(window, model, level='root',type_opt="", solver_name=""):
     # fill the tkinter window:
     if level=='root' : root = window
     else: root = Toplevel(window)
+    title = "n="+str(n)+' - '+type_opt+" - Solver "+solver_name
     title = type_opt+" - Solver "+solver_name+" - n = "+str(n)
     root.title(title)
     root.geometry(str(2*margin+ech)+"x"+str(ech+40))
@@ -95,14 +97,14 @@ def random_point(model, gen_multi):
 
 # perturbation
 def perturb_point(model, gen_pert, epsilon = 0.3):
-    model_3D = hasattr(model, 'z')
+    model_3D = hasattr(model, 'z') # returns True if the model has a attributes/coordinate z, and False otherwise
     epsilon = 0.1
     for i in model.N:
         model.x[i] = model.x[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.y[i] = model.y[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         if model_3D : model.z[i] = model.z[i].value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
         model.r=model.r.value*(1+gen_pert.uniform(-0.5, 0.5) * epsilon)
-        #project inside the box (ATTENTION: the perturbation is not anymore a uniform distribution)
+        #project inside the box (the perturbation is not anymore a uniform distribution)
         model.x[i] = max(0, min(model.x[i].value, 1))
         model.y[i] = max(0, min(model.y[i].value, 1))
         if model_3D : model.z[i] = max(0, min(model.z[i].value, 1))
